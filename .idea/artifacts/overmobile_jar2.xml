@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="overmobile:jar2">
+    <output-path>$PROJECT_DIR$/out/artifacts/overmobile_jar2</output-path>
+    <root id="archive" name="overmobile.jar">
+      <element id="module-output" name="overmobile" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/mongodb/mongo-java-driver/3.12.11/mongo-java-driver-3.12.11.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
