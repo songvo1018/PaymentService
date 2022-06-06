@@ -1,19 +1,21 @@
 package org.nosov;
 
-import com.mongodb.client.model.Filters;
 import org.apache.log4j.Logger;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
-import java.util.Set;
 
 public class ConfigProperties {
     private static ConfigProperties instance = null;
-    private Properties property;
+    private Properties properties;
     public static final String FILENAME = "src/main/resources/application.config";
-    private static final Logger LOGGER = Logger.getLogger(ConfigProperties.class.getName());
+
+    public Logger getLOGGER() {
+        return LOGGER;
+    }
+
+    private final Logger LOGGER = Logger.getLogger("[Payment]");
     private ConfigProperties () {
         if (!this.readConfigFile()) {
             System.exit(0); //Catastrophic
@@ -31,8 +33,8 @@ public class ConfigProperties {
 
         try {
             fis = new FileInputStream(FILENAME);
-            property = new Properties();
-            property.load(fis);
+            properties = new Properties();
+            properties.load(fis);
         } catch (IOException e) {
             System.err.println(e.toString());
             return false;
@@ -40,7 +42,7 @@ public class ConfigProperties {
         return true;
     }
 
-    public Properties getProperty() {
-        return property;
+    public Properties getProperties() {
+        return properties;
     }
 }

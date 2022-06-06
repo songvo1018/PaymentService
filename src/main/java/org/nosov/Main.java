@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 public class Main {
     public static void main(String[] args) throws Exception {
         Logger mainLogger = Logger.getLogger("main");
-        Properties properties =ConfigProperties.getInstance().getProperty();
+        Properties properties =ConfigProperties.getInstance().getProperties();
         String PORT = properties.getProperty("server_port", String.valueOf(8082));
 
         Server server = new Server(Integer.parseInt(PORT));
