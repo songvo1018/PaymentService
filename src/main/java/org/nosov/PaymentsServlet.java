@@ -18,6 +18,8 @@ public class PaymentsServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        PaymentService.handleCreatePayment(request, response);
+        response.setContentType("application/json");
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.getWriter().println("{ \"status\": " + PaymentService.handleCreatePayment(request) +"}");
     }
 }

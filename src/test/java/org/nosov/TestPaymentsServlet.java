@@ -45,14 +45,25 @@ public class TestPaymentsServlet extends Mockito {
     public void paymentWillStored() throws Exception {
         System.out.println("TEST: paymentWillStored()");
         assertEquals(sendRequest(), "{ \"status\": 0}");
-        System.out.println(" ");
+    }
+
+    @Test
+    public void manyPaymentWillStored() throws Exception {
+        System.out.println("TEST: manyPaymentWillStored()");
+        int correctlyStoredPayments = 0;
+        int REQUIRED_CONFIRMATION_RECEIVED = 15;
+        for (int i = 1; i <= REQUIRED_CONFIRMATION_RECEIVED; i++) {
+            if (sendRequest(i, (i + 10), (i + 20)).equals("{ \"status\": 0}") ) {
+                correctlyStoredPayments++;
+            }
+        }
+        assertEquals(correctlyStoredPayments, REQUIRED_CONFIRMATION_RECEIVED);
     }
 
     @Test
     public void duplicatePaymentNotBeStored() throws Exception {
         System.out.println("TEST: duplicatePaymentNotBeStored()");
         assertNotEquals(sendRequest(), sendRequest());
-        System.out.println(" ");
     }
 
     @Test
@@ -63,7 +74,6 @@ public class TestPaymentsServlet extends Mockito {
         } catch (Exception e) {
             assertNotEquals(e.getMessage(), "");
         }
-        System.out.println(" ");
     }
 
     @Test
@@ -74,7 +84,6 @@ public class TestPaymentsServlet extends Mockito {
         } catch (Exception e) {
             assertNotEquals(e.getMessage(), "");
         }
-        System.out.println(" ");
     }
 
     @Test
@@ -85,7 +94,6 @@ public class TestPaymentsServlet extends Mockito {
         } catch (Exception e) {
             assertNotEquals(e.getMessage(), "");
         }
-        System.out.println(" ");
     }
 
     private void sendRequestWithoutParameter(String parameter) throws IOException {
@@ -112,8 +120,8 @@ public class TestPaymentsServlet extends Mockito {
         PrintWriter writer = new PrintWriter(stringWriter);
         when(response.getWriter()).thenReturn(writer);
 
-        PaymentsServlet firstRequest = new PaymentsServlet();
-        firstRequest.doPost(request, response);
+        PaymentsServlet servlet = new PaymentsServlet();
+        servlet.doPost(request, response);
     }
 
     public String sendRequest() throws Exception {
@@ -123,6 +131,23 @@ public class TestPaymentsServlet extends Mockito {
         when(request.getParameter(PaymentService.USER_ID_FIELD)).thenReturn(testUserId);
         when(request.getParameter(PaymentService.PAYMENT_SUM_FIELD)).thenReturn(testSum);
         when(request.getParameter(PaymentService.PAYMENT_ID_FIELD)).thenReturn(testId);
+
+        StringWriter stringWriter = new StringWriter();
+        PrintWriter writer = new PrintWriter(stringWriter);
+        when(response.getWriter()).thenReturn(writer);
+
+        PaymentsServlet firstRequest = new PaymentsServlet();
+        firstRequest.doPost(request, response);
+        return stringWriter.getBuffer().toString().trim();
+    }
+
+    public String sendRequest(int userId, int paymentSum, int id) throws Exception {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        when(request.getParameter(PaymentService.USER_ID_FIELD)).thenReturn(userId + testUserId);
+        when(request.getParameter(PaymentService.PAYMENT_SUM_FIELD)).thenReturn(paymentSum + testSum);
+        when(request.getParameter(PaymentService.PAYMENT_ID_FIELD)).thenReturn(id + testId);
 
         StringWriter stringWriter = new StringWriter();
         PrintWriter writer = new PrintWriter(stringWriter);

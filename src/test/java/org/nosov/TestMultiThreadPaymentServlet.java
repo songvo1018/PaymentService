@@ -14,7 +14,6 @@ import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.nosov.MongoConnection.dropCollection;
 
-@Ignore
 @Test
 public class TestMultiThreadPaymentServlet {
     private String testUserId;

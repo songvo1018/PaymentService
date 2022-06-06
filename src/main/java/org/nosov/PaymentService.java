@@ -38,7 +38,7 @@ public class PaymentService {
     }
 
 
-    public static void handleCreatePayment (HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public static String handleCreatePayment (HttpServletRequest request) {
         String userId = request.getParameter(USER_ID_FIELD);
         String paymentId = request.getParameter(PAYMENT_ID_FIELD);
         String paymentSum = request.getParameter(PAYMENT_SUM_FIELD);
@@ -47,10 +47,7 @@ public class PaymentService {
         Logger logger = ConfigProperties.getInstance().getLOGGER();
 
         if (userId == null || paymentId == null || paymentSum == null) {
-            logger.error("PaymentService: Illegal argument", new IllegalArgumentException("One of required fields is empty."));
-            response.setContentType("application/json");
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            return;
+            throw new IllegalArgumentException("One of required fields is empty.");
         }
 
         Properties properties = ConfigProperties.getInstance().getProperties();
@@ -71,17 +68,13 @@ public class PaymentService {
             try {
                 collection.insertOne(toInsert);
                 result = "0";
-                response.getWriter().println("{ \"status\": " + result +"}");
             } catch (MongoException e) {
                 logger.error("PaymentService: Write error", e);
-                response.getWriter().println("{ \"status\": " + result +"}");
             }
         } catch (DuplicateKeyException e) {
             logger.error("PaymentService: Duplicate key", e);
-        } finally {
-            response.setContentType("application/json");
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         }
+        return result;
     }
 
 
