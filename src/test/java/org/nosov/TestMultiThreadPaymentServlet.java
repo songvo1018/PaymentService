@@ -1,5 +1,6 @@
 package org.nosov;
 
+import com.google.gson.Gson;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.testng.annotations.Test;
@@ -7,6 +8,7 @@ import org.testng.annotations.*;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.math.BigDecimal;
 import java.util.Properties;
 
 import static org.mockito.Mockito.mock;
@@ -45,16 +47,17 @@ public class TestMultiThreadPaymentServlet {
 
     @Test(threadPoolSize = 2, invocationCount = 10,  timeOut = 10000)
     public void onlyOnePaymentShouldBeStore() throws Exception {
-            assertEquals(sendRequest(), "{ \"status\": 0}");
+        Gson gson = new Gson();
+        Payment toStorage = new Payment(testUserId, Long.parseLong(testId), new BigDecimal(testSum));
+
+        assertEquals(sendRequest(gson.toJson(toStorage)), "{ \"status\": 0}");
     }
 
-    public String sendRequest() throws Exception {
+    public String sendRequest(String json) throws Exception {
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
 
-        when(request.getParameter(PaymentService.USER_ID_FIELD)).thenReturn(testUserId);
-        when(request.getParameter(PaymentService.PAYMENT_SUM_FIELD)).thenReturn(testSum);
-        when(request.getParameter(PaymentService.PAYMENT_ID_FIELD)).thenReturn(testId);
+        when(request.getParameter("payload")).thenReturn(json);
 
         StringWriter stringWriter = new StringWriter();
         PrintWriter writer = new PrintWriter(stringWriter);

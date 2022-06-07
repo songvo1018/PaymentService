@@ -1,18 +1,15 @@
 package org.nosov;
 
+import com.google.gson.*;
 import com.mongodb.*;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.apache.log4j.Logger;
 import org.bson.Document;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 
 public class PaymentService {
@@ -20,34 +17,28 @@ public class PaymentService {
     public final static String PAYMENT_SUM_FIELD = "sum";
     public final static String PAYMENT_ID_FIELD = "id";
 
-    public static void handleGetAllPayments(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        Properties properties = ConfigProperties.getInstance().getProperties();
-        MongoDatabase database = MongoConnection.getInstance().getDatabase(properties.getProperty("mongo_db", "payments_test"));
-
-        MongoCollection<Document> collection = database.getCollection(
-                properties.getProperty("mongo_collection", "payments_test")).withWriteConcern(WriteConcern.MAJORITY);
-        List<String> stored = new ArrayList<>();
-
-        for (Document doc : collection.find()) {
-            stored.add(doc.toJson());
+    public static String handleCreatePayment (HttpServletRequest request) {
+        String payload = request.getParameter("payload");
+        if (payload == null) {
+            throw new IllegalArgumentException("Payload not represented.");
         }
 
-        response.setContentType("application/json");
-        response.setStatus(HttpServletResponse.SC_OK);
-        response.getWriter().println(stored);
-    }
-
-
-    public static String handleCreatePayment (HttpServletRequest request) {
-        String userId = request.getParameter(USER_ID_FIELD);
-        String paymentId = request.getParameter(PAYMENT_ID_FIELD);
-        String paymentSum = request.getParameter(PAYMENT_SUM_FIELD);
-
-        String result = "1";
+        Payment toStorage;
+        Gson gson = new Gson();
         Logger logger = ConfigProperties.getInstance().getLOGGER();
+        String result = "1";
 
-        if (userId == null || paymentId == null || paymentSum == null) {
+        JsonElement json = JsonParser.parseString(payload).getAsJsonObject();
+
+        try {
+            toStorage = gson.fromJson(json, Payment.class);
+        } catch (JsonSyntaxException e) {
+            ConfigProperties.getInstance().getLOGGER().warn(e.getMessage());
             throw new IllegalArgumentException("One of required fields is empty.");
+        }
+
+        if (!toStorage.isDataCorrect()) {
+            throw new IllegalArgumentException("Incorrect data.");
         }
 
         Properties properties = ConfigProperties.getInstance().getProperties();
@@ -57,9 +48,9 @@ public class PaymentService {
                 properties.getProperty("mongo_collection", "payments_test")).withWriteConcern(WriteConcern.MAJORITY);
 
         Document toInsert = new Document()
-                .append(USER_ID_FIELD, userId)
-                .append(PAYMENT_SUM_FIELD, paymentSum)
-                .append(PAYMENT_ID_FIELD, paymentId);
+                .append(USER_ID_FIELD, toStorage.userId)
+                .append(PAYMENT_SUM_FIELD, toStorage.sum)
+                .append(PAYMENT_ID_FIELD, toStorage.id);
 
         IndexOptions indexOptions = new IndexOptions().unique(true);
 

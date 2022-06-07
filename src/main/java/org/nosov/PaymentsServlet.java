@@ -10,12 +10,6 @@ import java.io.Serial;
 public class PaymentsServlet extends HttpServlet {
     @Serial
     private static final long serialVersionUID = 1L;
-
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        PaymentService.handleGetAllPayments(request, response);
-    }
-
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json");

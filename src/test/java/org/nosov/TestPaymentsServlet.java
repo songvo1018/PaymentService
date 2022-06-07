@@ -1,5 +1,6 @@
 package org.nosov;
 
+import com.google.gson.Gson;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.mockito.Mockito;
@@ -11,6 +12,7 @@ import static org.nosov.MongoConnection.dropCollection;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.math.BigDecimal;
 import java.util.Properties;
 
 public class TestPaymentsServlet extends Mockito {
@@ -44,7 +46,10 @@ public class TestPaymentsServlet extends Mockito {
     @Test
     public void paymentWillStored() throws Exception {
         System.out.println("TEST: paymentWillStored()");
-        assertEquals(sendRequest(), "{ \"status\": 0}");
+        Gson gson = new Gson();
+        Payment toStorage = new Payment(testUserId, Long.parseLong(testId), new BigDecimal(testSum));
+
+        assertEquals(sendRequest(gson.toJson(toStorage)), "{ \"status\": 0}");
     }
 
     @Test
@@ -53,7 +58,10 @@ public class TestPaymentsServlet extends Mockito {
         int correctlyStoredPayments = 0;
         int REQUIRED_CONFIRMATION_RECEIVED = 15;
         for (int i = 1; i <= REQUIRED_CONFIRMATION_RECEIVED; i++) {
-            if (sendRequest(i, (i + 10), (i + 20)).equals("{ \"status\": 0}") ) {
+            Gson gson = new Gson();
+            Payment toStorage = new Payment(testUserId+i, Long.parseLong(testId + 10), new BigDecimal(testSum + 100));
+
+            if (sendRequest(gson.toJson(toStorage)).equals("{ \"status\": 0}") ) {
                 correctlyStoredPayments++;
             }
         }
@@ -63,7 +71,10 @@ public class TestPaymentsServlet extends Mockito {
     @Test
     public void duplicatePaymentNotBeStored() throws Exception {
         System.out.println("TEST: duplicatePaymentNotBeStored()");
-        assertNotEquals(sendRequest(), sendRequest());
+        Gson gson = new Gson();
+        Payment toStorage = new Payment(testUserId, Long.parseLong(testId), new BigDecimal(testSum));
+
+        assertNotEquals(sendRequest(gson.toJson(toStorage)), sendRequest(gson.toJson(toStorage)));
     }
 
     @Test
@@ -72,6 +83,7 @@ public class TestPaymentsServlet extends Mockito {
         try {
             sendRequestWithoutParameter(PaymentService.PAYMENT_SUM_FIELD);
         } catch (Exception e) {
+            ConfigProperties.getInstance().getLOGGER().warn(e.getMessage());
             assertNotEquals(e.getMessage(), "");
         }
     }
@@ -82,6 +94,7 @@ public class TestPaymentsServlet extends Mockito {
         try {
             sendRequestWithoutParameter(PaymentService.USER_ID_FIELD);
         } catch (Exception e) {
+            ConfigProperties.getInstance().getLOGGER().warn(e.getMessage());
             assertNotEquals(e.getMessage(), "");
         }
     }
@@ -92,6 +105,7 @@ public class TestPaymentsServlet extends Mockito {
         try {
             sendRequestWithoutParameter(PaymentService.PAYMENT_ID_FIELD);
         } catch (Exception e) {
+            ConfigProperties.getInstance().getLOGGER().warn(e.getMessage());
             assertNotEquals(e.getMessage(), "");
         }
     }
@@ -100,21 +114,21 @@ public class TestPaymentsServlet extends Mockito {
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
 
-        when(request.getParameter(PaymentService.USER_ID_FIELD)).thenReturn(testUserId);
-        when(request.getParameter(PaymentService.PAYMENT_SUM_FIELD)).thenReturn(testSum);
-        when(request.getParameter(PaymentService.PAYMENT_ID_FIELD)).thenReturn(testId);
+        Gson gson = new Gson();
+        Payment toStorage = new Payment(testUserId, Long.parseLong(testId), new BigDecimal(testSum));
 
         switch (parameter) {
             case PaymentService.USER_ID_FIELD:
-                when(request.getParameter(PaymentService.USER_ID_FIELD)).thenReturn(null);
+                toStorage.sum = null;
                 break;
             case PaymentService.PAYMENT_SUM_FIELD:
-                when(request.getParameter(PaymentService.PAYMENT_SUM_FIELD)).thenReturn(null);
+                toStorage.userId = null;
                 break;
             case PaymentService.PAYMENT_ID_FIELD:
-                when(request.getParameter(PaymentService.PAYMENT_ID_FIELD)).thenReturn(null);
+                toStorage.id = null;
                 break;
         }
+        when(request.getParameter("payload")).thenReturn(gson.toJson(toStorage));
 
         StringWriter stringWriter = new StringWriter();
         PrintWriter writer = new PrintWriter(stringWriter);
@@ -124,30 +138,11 @@ public class TestPaymentsServlet extends Mockito {
         servlet.doPost(request, response);
     }
 
-    public String sendRequest() throws Exception {
+    public String sendRequest(String json) throws Exception {
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
 
-        when(request.getParameter(PaymentService.USER_ID_FIELD)).thenReturn(testUserId);
-        when(request.getParameter(PaymentService.PAYMENT_SUM_FIELD)).thenReturn(testSum);
-        when(request.getParameter(PaymentService.PAYMENT_ID_FIELD)).thenReturn(testId);
-
-        StringWriter stringWriter = new StringWriter();
-        PrintWriter writer = new PrintWriter(stringWriter);
-        when(response.getWriter()).thenReturn(writer);
-
-        PaymentsServlet firstRequest = new PaymentsServlet();
-        firstRequest.doPost(request, response);
-        return stringWriter.getBuffer().toString().trim();
-    }
-
-    public String sendRequest(int userId, int paymentSum, int id) throws Exception {
-        HttpServletRequest request = mock(HttpServletRequest.class);
-        HttpServletResponse response = mock(HttpServletResponse.class);
-
-        when(request.getParameter(PaymentService.USER_ID_FIELD)).thenReturn(userId + testUserId);
-        when(request.getParameter(PaymentService.PAYMENT_SUM_FIELD)).thenReturn(paymentSum + testSum);
-        when(request.getParameter(PaymentService.PAYMENT_ID_FIELD)).thenReturn(id + testId);
+        when(request.getParameter("payload")).thenReturn(json);
 
         StringWriter stringWriter = new StringWriter();
         PrintWriter writer = new PrintWriter(stringWriter);
