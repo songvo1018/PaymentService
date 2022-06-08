@@ -5,10 +5,15 @@
 
 # Приложение
 Запуск: запустите метод `main` средствами IDE `src/main/java/org/nosov/Main.java`
+
 ![Screenshot](screenshot.png)
+
+# Postman
+`PaymentService.postman_collection.json`
 
 # Тесты
 Запуск: запустите класс `src/test/java/org/nosov/TestPaymentsServlet.java`
+
 ![Screenshot1](screenshot1.png)
 
 # Тест условия задания
@@ -19,6 +24,7 @@
 буду признателен за помощь.
 
 Запуск: запустите класс `src/test/java/org/nosov/TestPaymentsServlet.java`
+
 ![Screenshot2](screenshot2.png)
 
 Я был бы очень рад предоставить вам проект в контейнерах, но увы, я потерпел неудачу.
