@@ -6,11 +6,9 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletHandler;
 
 import java.util.Properties;
-import java.util.logging.Logger;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        Logger mainLogger = Logger.getLogger("main");
         Properties properties =ConfigProperties.getInstance().getProperties();
         String PORT = properties.getProperty("server_port", String.valueOf(8082));
 
@@ -23,7 +21,7 @@ public class Main {
 
         handler.addServletWithMapping(PaymentsServlet.class, "/*");
 
-        mainLogger.info("Server started on:" + PORT);
+        ConfigProperties.getInstance().getLOGGER().info("Server started on:" + PORT);
         server.start();
         server.join();
     }
